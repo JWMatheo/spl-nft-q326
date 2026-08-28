@@ -6,12 +6,12 @@ import {
 } from "@metaplex-foundation/umi";
 import { irysUploader } from "@metaplex-foundation/umi-uploader-irys";
 import { readFile } from "fs/promises";
+import { join } from "path";
 
 import wallet from "../../devnet-wallet.json";
+import { config } from "../config";
 
-const umi = createUmi(
-  process.env.SOLANA_RPC_URL ?? "https://api.devnet.solana.com",
-);
+const umi = createUmi(config.rpc.https);
 
 const keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(wallet));
 const signer = createSignerFromKeypair(umi, keypair);
@@ -26,14 +26,14 @@ umi.use(signerIdentity(signer));
 
 (async () => {
   try {
-    //chanege image path to your image path
-    const image = await readFile("file-path");
+    const image = await readFile(join(__dirname, "generug.png"));
 
-    //change the image name and mime type
-    // const file =
+    const file = createGenericFile(image, "generug.png", {
+      contentType: "image/png",
+    });
 
-    // const [myUri] =
-    // console.log("Your image URI: ", myUri);
+    const [myUri] = await umi.uploader.upload([file]);
+    console.log("Your image URI: ", myUri);
   } catch (error) {
     console.log(error);
   }
