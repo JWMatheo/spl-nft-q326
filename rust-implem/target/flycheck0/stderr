@@ -1,0 +1,6 @@
+    Updating crates.io index
+error: no matching package named `solana_sdk` found
+location searched: crates.io index
+required by package `rust-implem v0.1.0 (/Users/matheovallone/dev/perso/Turbine/spl-nft-q326/rust-implem)`
+help: packages with similar names: solana-sdk
+
