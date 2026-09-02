@@ -8,6 +8,7 @@ import {
   createSolanaRpcSubscriptions,
   createTransactionMessage,
   generateKeyPairSigner,
+  getBase64EncodedWireTransaction,
   getSignatureFromTransaction,
   sendAndConfirmTransactionFactory,
   setTransactionMessageFeePayerSigner,
@@ -21,7 +22,6 @@ import {
 } from "@solana-program/token";
 import { getCreateAccountInstruction } from "@solana-program/system";
 
-//import your wallet
 import wallet from "../../devnet-wallet.json";
 
 import { rpc, rpcSubscriptions } from "../rpc";
@@ -78,14 +78,28 @@ import { rpc, rpcSubscriptions } from "../rpc";
 
     assertIsTransactionWithBlockhashLifetime(signedTx);
 
+    const simulation = await rpc
+      .simulateTransaction(getBase64EncodedWireTransaction(signedTx), {
+        commitment: "confirmed",
+        encoding: "base64",
+      })
+      .send();
+
+    if (simulation.value.err) {
+      throw new Error(`Simulation failed: ${JSON.stringify(simulation.value.err)}`);
+    }
+
     const signature = getSignatureFromTransaction(signedTx);
 
     await sendAndConfirm(signedTx, {
-      commitment: "processed",
+      commitment: "confirmed",
     });
 
-    console.log(signature);
+    console.log(`simulation units: ${simulation.value.unitsConsumed}`);
+    console.log(`signature: ${signature}`);
+    console.log(`mint: ${mint.address}`);
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    process.exitCode = 1;
   }
 })();

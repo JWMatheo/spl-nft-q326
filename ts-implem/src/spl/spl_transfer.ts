@@ -6,6 +6,7 @@ import {
   createSolanaRpc,
   createSolanaRpcSubscriptions,
   createTransactionMessage,
+  getBase64EncodedWireTransaction,
   getSignatureFromTransaction,
   sendAndConfirmTransactionFactory,
   setTransactionMessageFeePayerSigner,
@@ -19,14 +20,11 @@ import {
   getTransferCheckedInstruction,
   TOKEN_PROGRAM_ADDRESS,
 } from "@solana-program/token";
-import { config } from "../config";
-import { token_decimals } from "./spl_mint";
 import { rpc, rpcSubscriptions } from "../rpc";
 
-//paste your mint address got from spl_init.ts
-const mint = address("Gazb1kd9AVmxvwCyEDMgB2fyJB29E2EYvHdCFuMrHypN");
+const tokenDecimals = 1_000_000n;
+const mint = address("4y2UoGff2mM3N3RNosKbasM6JSKUkPBoBSqeocvNnyWY");
 
-//paste the address of the recipient
 const to = address("GtXZhotSdJpgufcsXmJXW7cgZmVYNYQKxNNkKSh8sqpM");
 
 (async () => {
@@ -51,9 +49,9 @@ const to = address("GtXZhotSdJpgufcsXmJXW7cgZmVYNYQKxNNkKSh8sqpM");
     });
     console.log(`Your toAta is : ${toAta}`);
 
-    const createAtaIx = await getCreateAssociatedTokenInstructionAsync({mint, owner: to, payer: signer})
+    const createAtaIx = await getCreateAssociatedTokenInstructionAsync({mint, owner: to, payer: signer, tokenProgram: TOKEN_PROGRAM_ADDRESS})
 
-    const transferTx = getTransferCheckedInstruction({amount: 150n * token_decimals, authority: signer.address, decimals: 6, source: fromAta, destination: toAta, mint})
+    const transferTx = getTransferCheckedInstruction({amount: 150n * tokenDecimals, authority: signer.address, decimals: 6, source: fromAta, destination: toAta, mint})
 
     const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 
@@ -75,12 +73,25 @@ const to = address("GtXZhotSdJpgufcsXmJXW7cgZmVYNYQKxNNkKSh8sqpM");
 
     assertIsTransactionWithBlockhashLifetime(signedTx);
 
+    const simulation = await rpc
+      .simulateTransaction(getBase64EncodedWireTransaction(signedTx), {
+        commitment: "confirmed",
+        encoding: "base64",
+      })
+      .send();
+
+    if (simulation.value.err) {
+      throw new Error(`Simulation failed: ${JSON.stringify(simulation.value.err)}`);
+    }
+
     const signature = getSignatureFromTransaction(signedTx);
 
     await sendAndConfirm(signedTx, { commitment: "confirmed" });
 
+    console.log(`simulation units: ${simulation.value.unitsConsumed}`);
     console.log(`mint txid: ${signature}`);
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    process.exitCode = 1;
   }
 })();

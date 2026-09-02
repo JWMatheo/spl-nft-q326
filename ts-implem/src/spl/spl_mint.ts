@@ -7,6 +7,7 @@ import {
   createSolanaRpc,
   createSolanaRpcSubscriptions,
   createTransactionMessage,
+  getBase64EncodedWireTransaction,
   getSignatureFromTransaction,
   sendAndConfirmTransactionFactory,
   setTransactionMessageFeePayerSigner,
@@ -24,11 +25,10 @@ import { rpc, rpcSubscriptions } from "../rpc";
 
 
 
-export const token_decimals = 1_000_000n;
+const tokenDecimals = 1_000_000n;
 
 
-//paste your mint address got from spl_init.ts
-const mint = address("Gazb1kd9AVmxvwCyEDMgB2fyJB29E2EYvHdCFuMrHypN");
+const mint = address("4y2UoGff2mM3N3RNosKbasM6JSKUkPBoBSqeocvNnyWY");
 
 (async () => {
   try {
@@ -42,7 +42,7 @@ const mint = address("Gazb1kd9AVmxvwCyEDMgB2fyJB29E2EYvHdCFuMrHypN");
     console.log(`Your ata is : ${ata}`);
 
     const createAtaIx = await getCreateAssociatedTokenInstructionAsync({mint, owner: signer.address, payer: signer, ata, tokenProgram: TOKEN_PROGRAM_ADDRESS})
-    const mintToIx = getMintToInstruction({amount: 150n * token_decimals, mint, mintAuthority: signer.address, token: ata})
+    const mintToIx = getMintToInstruction({amount: 150n * tokenDecimals, mint, mintAuthority: signer.address, token: ata})
 
     const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 
@@ -64,6 +64,17 @@ const mint = address("Gazb1kd9AVmxvwCyEDMgB2fyJB29E2EYvHdCFuMrHypN");
 
     assertIsTransactionWithBlockhashLifetime(signedTx);
 
+    const simulation = await rpc
+      .simulateTransaction(getBase64EncodedWireTransaction(signedTx), {
+        commitment: "confirmed",
+        encoding: "base64",
+      })
+      .send();
+
+    if (simulation.value.err) {
+      throw new Error(`Simulation failed: ${JSON.stringify(simulation.value.err)}`);
+    }
+
     const signature = getSignatureFromTransaction(signedTx);
 
     const sendAndConfirm = sendAndConfirmTransactionFactory({
@@ -73,8 +84,10 @@ const mint = address("Gazb1kd9AVmxvwCyEDMgB2fyJB29E2EYvHdCFuMrHypN");
 
     await sendAndConfirm(signedTx, { commitment: "confirmed" });
 
+    console.log(`simulation units: ${simulation.value.unitsConsumed}`);
     console.log(`mint txid: ${signature}`);
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    process.exitCode = 1;
   }
 })();

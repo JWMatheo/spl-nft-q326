@@ -22,21 +22,18 @@ umi.use(signerIdentity(signer));
 
 (async () => {
   try {
-    //change the image uri to your image uri obtained from nft_image.ts
     const image =
-      "https://gateway.irys.xyz/4TPr5zxzdXcDb85hP23oa1PfTd2XKtpWjiSN9RUNjf9Q";
+      "https://gateway.irys.xyz/2ZGWuupLwnTbzqiZwKL2VQuuPWYTSKW3P4DSRPADaRho";
 
-    //json scheme : https://www.metaplex.com/docs/smart-contracts/core/json-schema
-    //change the metadata
     const metadata = {
-      name: "myNftItem",
-      description: "I'm inspired!",
+      name: "Q326 Core NFT Updated",
+      description: "Updated Turbin3 Week 1 MPL Core NFT on Solana devnet.",
       image,
       category: "image",
       attributes: [
         {
-          trait_type: "Mindset",
-          value: "Personal growth",
+          trait_type: "Status",
+          value: "Updated",
         },
       ],
     };
@@ -44,6 +41,7 @@ umi.use(signerIdentity(signer));
     const myUri = await umi.uploader.uploadJson(metadata);
     console.log(`metadata uri: ${myUri}`);
   } catch (error) {
-    console.log("error", error);
+    console.error(error);
+    process.exitCode = 1;
   }
 })();

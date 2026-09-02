@@ -14,8 +14,7 @@ import {
 import bs58 from "bs58";
 import { config } from "../config";
 
-//paste your mint address got from spl_init.ts
-const mint = publicKey("Gazb1kd9AVmxvwCyEDMgB2fyJB29E2EYvHdCFuMrHypN");
+const mint = publicKey("4y2UoGff2mM3N3RNosKbasM6JSKUkPBoBSqeocvNnyWY");
 
 const umi = createUmi(config.rpc.https);
 
@@ -31,12 +30,11 @@ umi.use(signerIdentity(signer));
       mintAuthority: signer,
     };
 
-    //change the metadata
     const data: DataV2Args ={
-      name: "yes yes",
-      symbol: "no",
-      uri: "https://pinata.cloud/1234",
-      sellerFeeBasisPoints: 1,
+      name: "Q326 Devnet Token",
+      symbol: "Q326",
+      uri: "https://gateway.irys.xyz/DW5gkatWP6Dbs4JWPNsQycYYgstPrLnLJYy2w2kJhkfJ",
+      sellerFeeBasisPoints: 0,
       creators: null,
       collection: null,
       uses: null
@@ -53,9 +51,20 @@ umi.use(signerIdentity(signer));
       ...args,
     });
 
+    const signedTx = await tx.buildAndSign(umi);
+    const simulation = await umi.rpc.simulateTransaction(signedTx, {
+      commitment: "confirmed",
+    });
+
+    if (simulation.err) {
+      throw new Error(`Simulation failed: ${JSON.stringify(simulation.err)}`);
+    }
+
     const result = await tx.sendAndConfirm(umi);
+    console.log(`simulation units: ${simulation.unitsConsumed}`);
     console.log("signature: ", bs58.encode(Buffer.from(result.signature)));
   } catch (error) {
-    console.log("error", error);
+    console.error(error);
+    process.exitCode = 1;
   }
 })();

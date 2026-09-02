@@ -4,14 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test -r ts-node/register tests/**/*.test.ts",
+    "typecheck": "tsc --noEmit",
     "spl:init": "npx ts-node -r dotenv/config src/spl/spl_init.ts",
     "spl:metadata": "npx ts-node -r dotenv/config src/spl/spl_metadata.ts",
     "spl:mint": "npx ts-node -r dotenv/config src/spl/spl_mint.ts",
     "spl:transfer": "npx ts-node -r dotenv/config src/spl/spl_transfer.ts",
     "nft:image": "npx ts-node -r dotenv/config src/nft/nft_image.ts",
     "nft:metadata": "npx ts-node -r dotenv/config src/nft/nft_metadata.ts",
-    "nft:mint": "npx ts-node -r dotenv/config src/nft/nft_mint.ts"
+    "nft:mint": "npx ts-node -r dotenv/config src/nft/nft_mint.ts",
+    "nft:update": "npx ts-node -r dotenv/config src/nft/nft_update.ts",
+    "nft:transfer": "npx ts-node -r dotenv/config src/nft/nft_transfer.ts",
+    "nft:burn": "npx ts-node -r dotenv/config src/nft/nft_burn.ts"
   },
   "keywords": [],
   "author": "",

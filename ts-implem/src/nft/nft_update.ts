@@ -1,30 +1,34 @@
-import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
-import wallet from "../../devnet-wallet.json";
+import { fetchAsset, mplCore } from "@metaplex-foundation/mpl-core";
 import {
   createSignerFromKeypair,
-  generateSigner,
+  publicKey,
   signerIdentity,
 } from "@metaplex-foundation/umi";
-import { create, mplCore } from "@metaplex-foundation/mpl-core";
 import { base58 } from "@metaplex-foundation/umi/serializers";
+import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
+import wallet from "../../devnet-wallet.json";
 import { config } from "../config";
+import { buildNftUpdate } from "./nft_operations";
+
+const assetAddress = process.env.NFT_ASSET_ADDRESS;
+const name = process.env.NFT_NAME;
+const metadataUri = process.env.NFT_METADATA_URI;
+
+if (!assetAddress || !name || !metadataUri) {
+  throw new Error("Missing NFT update env");
+}
 
 const umi = createUmi(config.rpc.https);
-
 const keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(wallet));
 const signer = createSignerFromKeypair(umi, keypair);
 
 umi.use(signerIdentity(signer));
-
 umi.use(mplCore());
 
 (async () => {
   try {
-    const metadataUri =
-      "https://gateway.irys.xyz/ChdBTTzUPjUQYGpHw2zLwSfPaqsxoqE3UkeqRdPPcHnL";
-    const asset = generateSigner(umi);
-
-    const tx = create(umi, { asset, uri: metadataUri, name: "Q326 Core NFT" });
+    const asset = await fetchAsset(umi, publicKey(assetAddress));
+    const tx = buildNftUpdate(umi, asset, name, metadataUri);
     const signedTx = await tx.buildAndSign(umi);
     const simulation = await umi.rpc.simulateTransaction(signedTx, {
       commitment: "confirmed",
@@ -38,7 +42,7 @@ umi.use(mplCore());
     const [signature] = base58.deserialize(result.signature);
 
     console.log(`simulation units: ${simulation.unitsConsumed}`);
-    console.log(`signature ${signature} , asset : ${asset.publicKey}`);
+    console.log(`signature ${signature}`);
   } catch (error) {
     console.error(error);
     process.exitCode = 1;
