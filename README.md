@@ -1,5 +1,7 @@
 # Week 1 Assignment — SPL Token and NFT
 
+![All NFT instruction tests passing](assets/tests-passing.png)
+
 TypeScript scripts for the Turbin3 Week 1 assignment on Solana devnet. The project creates and transfers an SPL token, mints and updates an MPL Core NFT, then completes the optional ownership transfer and burn challenges.
 
 ## Completed tasks
